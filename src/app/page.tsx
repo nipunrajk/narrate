@@ -1,3 +1,12 @@
-export default function Home() {
-  return 'hello';
+import { redirect } from 'next/navigation';
+import { getUser } from '@/lib/supabase/auth-server';
+
+export default async function Home() {
+  const user = await getUser();
+
+  if (user) {
+    redirect('/dashboard');
+  } else {
+    redirect('/login');
+  }
 }

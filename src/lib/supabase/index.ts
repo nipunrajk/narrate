@@ -3,22 +3,11 @@ export { createClient } from './client';
 export { createClient as createServerClient } from './server';
 export { updateSession } from './middleware';
 
-// Auth utilities
-export {
-  getUser,
-  getSession,
-  signUp,
-  signIn,
-  signOut,
-  resetPassword,
-} from './auth';
+// Server-side auth utilities
+export { getUser, getSession } from './auth-server';
 
-// Database utilities
-export {
-  getProfile,
-  createProfile,
-  updateProfile,
-  getUserEntries,
-  createEntry,
-  getEntriesInDateRange,
-} from './database';
+// Client-side auth utilities
+export { signUp, signIn, signOut, resetPassword } from './auth';
+
+// Profile utilities
+export { getProfile, createProfile, updateProfile } from './auth';

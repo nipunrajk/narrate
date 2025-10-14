@@ -38,16 +38,49 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/signup') &&
-    !request.nextUrl.pathname.startsWith('/forgot-password') &&
-    request.nextUrl.pathname !== '/'
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
+  // If user is authenticated, ensure profile exists
+  if (user) {
+    try {
+      // Check if profile exists
+      const { error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      // If profile doesn't exist, create it
+      if (error && error.code === 'PGRST116') {
+        await supabase.from('profiles').insert({
+          id: user.id,
+          username: user.email?.split('@')[0] || null,
+        });
+      }
+    } catch (error) {
+      console.error('Error handling profile:', error);
+    }
+  }
+
+  // Protected routes - redirect to login if not authenticated
+  const protectedPaths = ['/dashboard'];
+  const isProtectedPath = protectedPaths.some((path) =>
+    request.nextUrl.pathname.startsWith(path)
+  );
+
+  if (!user && isProtectedPath) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
+    return NextResponse.redirect(url);
+  }
+
+  // Redirect authenticated users away from auth pages
+  const authPaths = ['/login', '/signup', '/forgot-password'];
+  const isAuthPath = authPaths.some((path) =>
+    request.nextUrl.pathname.startsWith(path)
+  );
+
+  if (user && isAuthPath) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
     return NextResponse.redirect(url);
   }
 
