@@ -34,6 +34,14 @@ const config: Config = {
           DEFAULT: 'rgb(var(--color-destructive))',
           foreground: 'rgb(var(--color-destructive-foreground))',
         },
+        success: {
+          DEFAULT: 'rgb(var(--color-success))',
+          foreground: 'rgb(var(--color-success-foreground))',
+        },
+        warning: {
+          DEFAULT: 'rgb(var(--color-warning))',
+          foreground: 'rgb(var(--color-warning-foreground))',
+        },
         muted: {
           DEFAULT: 'rgb(var(--color-muted))',
           foreground: 'rgb(var(--color-muted-foreground))',
@@ -74,18 +82,6 @@ const config: Config = {
           700: '#404040',
           800: '#262626',
           900: '#171717',
-        },
-        success: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          200: '#bbf7d0',
-          300: '#86efac',
-          400: '#4ade80',
-          500: '#22c55e',
-          600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',
-          900: '#14532d',
         },
         error: {
           50: '#fef2f2',

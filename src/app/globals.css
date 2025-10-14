@@ -23,6 +23,10 @@
   --color-accent-foreground: 15 23 42;
   --color-destructive: 239 68 68;
   --color-destructive-foreground: 248 250 252;
+  --color-success: 34 197 94;
+  --color-success-foreground: 248 250 252;
+  --color-warning: 245 158 11;
+  --color-warning-foreground: 15 23 42;
   --color-border: 226 232 240;
   --color-input: 226 232 240;
   --color-ring: 15 23 42;
@@ -47,6 +51,10 @@
   --color-accent-foreground: 248 250 252;
   --color-destructive: 220 38 38;
   --color-destructive-foreground: 248 250 252;
+  --color-success: 34 197 94;
+  --color-success-foreground: 248 250 252;
+  --color-warning: 245 158 11;
+  --color-warning-foreground: 15 23 42;
   --color-border: 30 41 59;
   --color-input: 30 41 59;
   --color-ring: 212 212 216;
@@ -191,6 +199,14 @@ body {
   animation: slideUp 0.3s ease-out;
 }
 
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out;
+}
+
+.animate-pulse-error {
+  animation: pulseError 2s infinite;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -208,6 +224,25 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseError {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
   }
 }
 

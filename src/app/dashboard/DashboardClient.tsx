@@ -14,6 +14,69 @@ interface DashboardClientProps {
   initialEntries: JournalEntry[];
 }
 
+// Error fallback for the main dashboard content
+function DashboardErrorFallback({ resetError }: { resetError: () => void }) {
+  return (
+    <div className='bg-card rounded-xl border border-destructive/20 p-6 shadow-soft'>
+      <div className='text-center'>
+        <div className='text-destructive mb-4'>
+          <svg
+            className='w-12 h-12 mx-auto'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+            aria-hidden='true'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z'
+            />
+          </svg>
+        </div>
+        <h3 className='text-lg font-medium text-card-foreground mb-2'>
+          Unable to load your journal
+        </h3>
+        <p className='text-muted-foreground mb-4'>
+          We encountered an issue loading your journal content. Please try
+          again.
+        </p>
+        <button
+          onClick={resetError}
+          className='bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors-smooth'
+        >
+          Try Again
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Error fallback for the modal
+function ModalErrorFallback({ resetError }: { resetError: () => void }) {
+  return (
+    <div className='fixed inset-0 bg-black/50 backdrop-blur-adaptive flex items-center justify-center p-4 z-50'>
+      <div className='bg-card rounded-lg p-6 max-w-md w-full shadow-medium border border-border'>
+        <div className='text-center'>
+          <h3 className='text-lg font-medium text-card-foreground mb-2'>
+            Modal Error
+          </h3>
+          <p className='text-muted-foreground mb-4'>
+            Unable to load the weekly summary modal.
+          </p>
+          <button
+            onClick={resetError}
+            className='bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors-smooth'
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Loading fallback for the main dashboard content
 function DashboardLoadingFallback() {
   return (
@@ -124,43 +187,7 @@ export function DashboardClient({ initialEntries }: DashboardClientProps) {
         </div>
 
         {/* Dashboard Content with Suspense and Error Boundary */}
-        <ErrorBoundary
-          fallback={({ resetError }) => (
-            <div className='bg-card rounded-xl border border-destructive/20 p-6 shadow-soft'>
-              <div className='text-center'>
-                <div className='text-destructive mb-4'>
-                  <svg
-                    className='w-12 h-12 mx-auto'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                    aria-hidden='true'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z'
-                    />
-                  </svg>
-                </div>
-                <h3 className='text-lg font-medium text-card-foreground mb-2'>
-                  Unable to load your journal
-                </h3>
-                <p className='text-muted-foreground mb-4'>
-                  We encountered an issue loading your journal content. Please
-                  try again.
-                </p>
-                <button
-                  onClick={resetError}
-                  className='bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors-smooth'
-                >
-                  Try Again
-                </button>
-              </div>
-            </div>
-          )}
-        >
+        <ErrorBoundary fallback={DashboardErrorFallback}>
           <Suspense fallback={<DashboardLoadingFallback />}>
             <JournalDashboard
               initialEntries={initialEntries}
@@ -171,31 +198,7 @@ export function DashboardClient({ initialEntries }: DashboardClientProps) {
       </main>
 
       {/* Weekly Summary Modal with Error Boundary */}
-      <ErrorBoundary
-        fallback={({ resetError }) => (
-          <div className='fixed inset-0 bg-black/50 backdrop-blur-adaptive flex items-center justify-center p-4 z-50'>
-            <div className='bg-card rounded-lg p-6 max-w-md w-full shadow-medium border border-border'>
-              <div className='text-center'>
-                <h3 className='text-lg font-medium text-card-foreground mb-2'>
-                  Modal Error
-                </h3>
-                <p className='text-muted-foreground mb-4'>
-                  Unable to load the weekly summary modal.
-                </p>
-                <button
-                  onClick={() => {
-                    resetError();
-                    setIsWeeklySummaryOpen(false);
-                  }}
-                  className='bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors-smooth'
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      >
+      <ErrorBoundary fallback={ModalErrorFallback}>
         <WeeklySummaryModal
           isOpen={isWeeklySummaryOpen}
           onClose={handleWeeklySummaryClose}

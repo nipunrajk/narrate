@@ -4,7 +4,9 @@ import React, { useState, useCallback } from 'react';
 import { EntryForm } from './EntryForm';
 import { EntryList } from './EntryList';
 import { WeeklySummaryModal } from './WeeklySummaryModal';
+import { ErrorDisplay } from '@/components/ui/ErrorDisplay';
 import { useOptimisticEntries } from '@/hooks/useOptimisticEntries';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
 import type { JournalEntry } from '@/lib/types/database';
 
 interface JournalDashboardProps {
@@ -18,33 +20,42 @@ export function JournalDashboard({
   className = '',
   onWeeklySummaryClick,
 }: JournalDashboardProps) {
-  const [error, setError] = useState<string>('');
   const [isWeeklySummaryOpen, setIsWeeklySummaryOpen] = useState(false);
   const { entries, addEntry, updateEntry } =
     useOptimisticEntries(initialEntries);
+
+  // Enhanced error handling for dashboard-level errors
+  const { error, setError, clearError, retry, canRetry, isRetrying } =
+    useErrorHandler({
+      maxRetries: 2,
+      retryDelay: 1500,
+    });
 
   // Handle successful entry save
   const handleEntrySaved = useCallback(
     (savedEntry: JournalEntry) => {
       updateEntry(savedEntry);
-      setError(''); // Clear any previous errors
+      clearError(); // Clear any previous errors
     },
-    [updateEntry]
+    [updateEntry, clearError]
   );
 
   // Handle optimistic entry addition
   const handleOptimisticAdd = useCallback(
     (content: string) => {
       addEntry({ content });
-      setError(''); // Clear any previous errors
+      clearError(); // Clear any previous errors
     },
-    [addEntry]
+    [addEntry, clearError]
   );
 
   // Handle errors
-  const handleError = useCallback((errorMessage: string) => {
-    setError(errorMessage);
-  }, []);
+  const handleError = useCallback(
+    (errorMessage: string) => {
+      setError(errorMessage);
+    },
+    [setError]
+  );
 
   // Handle weekly summary modal
   const handleWeeklySummaryClick = useCallback(() => {
@@ -63,47 +74,15 @@ export function JournalDashboard({
     <div className={`max-w-6xl mx-auto ${className}`}>
       {/* Error display */}
       {error && (
-        <div className='mb-6 lg:mb-8 bg-destructive/10 border border-destructive/20 rounded-lg p-4 shadow-soft animate-fade-in'>
-          <div className='flex items-center'>
-            <svg
-              className='w-5 h-5 text-destructive mr-3 flex-shrink-0'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-              aria-hidden='true'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-              />
-            </svg>
-            <div className='flex-1'>
-              <p className='text-destructive text-sm font-medium'>Error</p>
-              <p className='text-destructive/80 text-sm'>{error}</p>
-            </div>
-            <button
-              onClick={() => setError('')}
-              className='ml-4 text-destructive/60 hover:text-destructive transition-colors-smooth touch-target'
-              aria-label='Dismiss error'
-            >
-              <svg
-                className='w-4 h-4'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-                aria-hidden='true'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M6 18L18 6M6 6l12 12'
-                />
-              </svg>
-            </button>
-          </div>
+        <div className='mb-6 lg:mb-8'>
+          <ErrorDisplay
+            error={error}
+            onRetry={canRetry ? retry : undefined}
+            onDismiss={clearError}
+            canRetry={canRetry}
+            isRetrying={isRetrying}
+            variant='banner'
+          />
         </div>
       )}
 

@@ -7,6 +7,63 @@ import { redirect } from 'next/navigation';
 import { DashboardClient } from './DashboardClient';
 import { Suspense } from 'react';
 import type { JournalEntry } from '@/lib/types/database';
+import type { User } from '@supabase/supabase-js';
+
+// Error fallback component for the dashboard page
+function DashboardPageErrorFallback({
+  resetError,
+  user,
+}: {
+  resetError: () => void;
+  user: User;
+}) {
+  return (
+    <div className='min-h-screen bg-background'>
+      <Header user={user} />
+      <main className='flex items-center justify-center p-4 min-h-[calc(100vh-4rem)]'>
+        <div className='bg-card rounded-lg border border-border p-8 max-w-md w-full text-center shadow-soft'>
+          <div className='text-destructive mb-4'>
+            <svg
+              className='w-16 h-16 mx-auto'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+              aria-hidden='true'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z'
+              />
+            </svg>
+          </div>
+          <h2 className='text-xl font-semibold text-card-foreground mb-2'>
+            Unable to load dashboard
+          </h2>
+          <p className='text-muted-foreground mb-6'>
+            We encountered an issue loading your journal dashboard. Please try
+            refreshing the page.
+          </p>
+          <div className='flex flex-col sm:flex-row gap-3 justify-center'>
+            <button
+              onClick={resetError}
+              className='bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors-smooth'
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className='border border-input text-foreground px-4 py-2 rounded-md hover:bg-accent transition-colors-smooth'
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
 
 // Loading component for the dashboard page
 function DashboardPageLoading() {
@@ -65,51 +122,8 @@ export default async function DashboardPage() {
     return (
       <ProtectedRoute>
         <ErrorBoundary
-          fallback={({ resetError }) => (
-            <div className='min-h-screen bg-background'>
-              <Header user={user} />
-              <main className='flex items-center justify-center p-4 min-h-[calc(100vh-4rem)]'>
-                <div className='bg-card rounded-lg border border-border p-8 max-w-md w-full text-center shadow-soft'>
-                  <div className='text-destructive mb-4'>
-                    <svg
-                      className='w-16 h-16 mx-auto'
-                      fill='none'
-                      stroke='currentColor'
-                      viewBox='0 0 24 24'
-                      aria-hidden='true'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth={2}
-                        d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z'
-                      />
-                    </svg>
-                  </div>
-                  <h2 className='text-xl font-semibold text-card-foreground mb-2'>
-                    Unable to load dashboard
-                  </h2>
-                  <p className='text-muted-foreground mb-6'>
-                    We encountered an issue loading your journal dashboard.
-                    Please try refreshing the page.
-                  </p>
-                  <div className='flex flex-col sm:flex-row gap-3 justify-center'>
-                    <button
-                      onClick={resetError}
-                      className='bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors-smooth'
-                    >
-                      Try Again
-                    </button>
-                    <button
-                      onClick={() => window.location.reload()}
-                      className='border border-input text-foreground px-4 py-2 rounded-md hover:bg-accent transition-colors-smooth'
-                    >
-                      Refresh Page
-                    </button>
-                  </div>
-                </div>
-              </main>
-            </div>
+          fallback={(props) => (
+            <DashboardPageErrorFallback {...props} user={user} />
           )}
         >
           <div className='min-h-screen bg-background'>

@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
+import { ErrorDisplay } from '@/components/ui/ErrorDisplay';
+import { LoadingState } from '@/components/ui/LoadingState';
 import {
   generateWeeklySummaryAction,
   canGenerateWeeklySummary,
 } from '@/lib/actions/entries';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import type { WeeklySummary } from '@/lib/types/database';
 
 interface WeeklySummaryModalProps {
@@ -18,29 +22,49 @@ const WeeklySummaryModal: React.FC<WeeklySummaryModalProps> = ({
 }) => {
   const [summary, setSummary] = useState<WeeklySummary | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [eligibility, setEligibility] = useState<{
     canGenerate: boolean;
     entryCount: number;
   } | null>(null);
+
+  const { isOffline } = useNetworkStatus();
+  const { error, setError, clearError, retry, canRetry, isRetrying } =
+    useErrorHandler({
+      maxRetries: 3,
+      retryDelay: 2000,
+      onRetry: async () => {
+        if (eligibility?.canGenerate) {
+          await handleGenerateSummary();
+        } else {
+          await checkEligibility();
+        }
+      },
+    });
 
   // Check eligibility when modal opens
   React.useEffect(() => {
     if (isOpen && !eligibility) {
       checkEligibility();
     }
-  }, [isOpen, eligibility]);
+  }, [isOpen, eligibility]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset state when modal closes
   React.useEffect(() => {
     if (!isOpen) {
       setSummary(null);
-      setError(null);
+      clearError();
       setEligibility(null);
     }
-  }, [isOpen]);
+  }, [isOpen, clearError]);
 
-  const checkEligibility = async () => {
+  const checkEligibility = React.useCallback(async () => {
+    clearError();
+
+    if (isOffline) {
+      setError('You need an internet connection to check your entries.');
+      return;
+    }
+
     try {
       const result = await canGenerateWeeklySummary();
       if (result.success && result.data) {
@@ -48,14 +72,24 @@ const WeeklySummaryModal: React.FC<WeeklySummaryModalProps> = ({
       } else {
         setError(result.error || 'Failed to check eligibility');
       }
-    } catch {
-      setError('Failed to check if you can generate a summary');
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to check if you can generate a summary';
+      setError(errorMessage);
     }
-  };
+  }, [clearError, isOffline, setError]);
 
   const handleGenerateSummary = async () => {
+    clearError();
+
+    if (isOffline) {
+      setError('You need an internet connection to generate a summary.');
+      return;
+    }
+
     setIsLoading(true);
-    setError(null);
 
     try {
       const result = await generateWeeklySummaryAction();
@@ -65,8 +99,12 @@ const WeeklySummaryModal: React.FC<WeeklySummaryModalProps> = ({
       } else {
         setError(result.error || 'Failed to generate summary');
       }
-    } catch {
-      setError('An unexpected error occurred while generating your summary');
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'An unexpected error occurred while generating your summary';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -76,42 +114,35 @@ const WeeklySummaryModal: React.FC<WeeklySummaryModalProps> = ({
     // Loading state for eligibility check
     if (!eligibility && !error) {
       return (
-        <div className='flex items-center justify-center py-8'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-slate-600'></div>
-          <span className='ml-3 text-slate-600'>Checking your entries...</span>
-        </div>
+        <LoadingState
+          isLoading={true}
+          message='Checking your entries...'
+          className='py-8'
+        >
+          <div />
+        </LoadingState>
       );
     }
 
     // Error state
     if (error) {
       return (
-        <div className='text-center py-8'>
-          <div className='text-red-600 mb-4'>
-            <svg
-              className='w-12 h-12 mx-auto mb-2'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z'
-              />
-            </svg>
-          </div>
-          <p className='text-slate-700 mb-4'>{error}</p>
-          <Button
-            onClick={() => {
-              setError(null);
-              checkEligibility();
-            }}
-            variant='outline'
-          >
-            Try Again
-          </Button>
+        <div className='py-8'>
+          <ErrorDisplay
+            error={error}
+            onRetry={canRetry ? retry : undefined}
+            canRetry={canRetry}
+            isRetrying={isRetrying}
+            variant='card'
+            className='mb-4'
+          />
+          {!canRetry && (
+            <div className='text-center'>
+              <Button onClick={onClose} variant='outline'>
+                Close
+              </Button>
+            </div>
+          )}
         </div>
       );
     }
@@ -294,10 +325,16 @@ const WeeklySummaryModal: React.FC<WeeklySummaryModalProps> = ({
           </Button>
           <Button
             onClick={handleGenerateSummary}
-            isLoading={isLoading}
-            disabled={isLoading}
+            isLoading={isLoading || isRetrying}
+            disabled={isLoading || isOffline || isRetrying}
           >
-            {isLoading ? 'Generating...' : 'Generate Summary'}
+            {isRetrying
+              ? 'Retrying...'
+              : isLoading
+              ? 'Generating...'
+              : isOffline
+              ? 'Offline'
+              : 'Generate Summary'}
           </Button>
         </div>
       </div>

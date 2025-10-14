@@ -3,8 +3,11 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { TextArea } from '@/components/ui/TextArea';
 import { Button } from '@/components/ui/Button';
+import { ErrorDisplay } from '@/components/ui/ErrorDisplay';
 import { saveEntry } from '@/lib/actions/entries';
 import { validateEntryContent } from '@/lib/utils/validation';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { cn } from '@/lib/utils';
 import type { JournalEntry } from '@/lib/types/database';
 
@@ -33,6 +36,25 @@ export function EntryForm({
   const [saveStatus, setSaveStatus] = useState<
     'idle' | 'saving' | 'saved' | 'error'
   >('idle');
+
+  // Enhanced error handling
+  const { isOffline } = useNetworkStatus();
+  const {
+    error: formError,
+    setError,
+    clearError,
+    retry,
+    canRetry,
+    isRetrying,
+  } = useErrorHandler({
+    maxRetries: 3,
+    retryDelay: 1000,
+    onRetry: async () => {
+      if (content.trim()) {
+        await handleManualSave();
+      }
+    },
+  });
 
   // Refs for auto-save functionality
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -121,8 +143,20 @@ export function EntryForm({
   }, [content, autoSaveDelay, handleAutoSave]);
 
   const handleManualSave = useCallback(async () => {
+    // Clear any previous errors
+    clearError();
+    setValidationError('');
+
     if (!content.trim()) {
       setValidationError('Please write something before saving');
+      return;
+    }
+
+    // Check offline status
+    if (isOffline) {
+      setError(
+        'You appear to be offline. Please check your connection and try again.'
+      );
       return;
     }
 
@@ -133,7 +167,6 @@ export function EntryForm({
       return;
     }
 
-    setValidationError('');
     setIsLoading(true);
     setSaveStatus('saving');
     isManualSaveRef.current = true;
@@ -160,13 +193,16 @@ export function EntryForm({
         lastContentRef.current = '';
       } else {
         setSaveStatus('error');
-        setValidationError(result.error || 'Failed to save entry');
-        onError?.(result.error || 'Failed to save entry');
+        const errorMessage = result.error || 'Failed to save entry';
+        setError(errorMessage);
+        onError?.(errorMessage);
       }
-    } catch {
+    } catch (error) {
       setSaveStatus('error');
-      setValidationError('An unexpected error occurred');
-      onError?.('An unexpected error occurred');
+      const errorMessage =
+        error instanceof Error ? error.message : 'An unexpected error occurred';
+      setError(errorMessage);
+      onError?.(errorMessage);
     } finally {
       setIsLoading(false);
       isManualSaveRef.current = false;
@@ -176,7 +212,15 @@ export function EntryForm({
         setSaveStatus('idle');
       }, 2000);
     }
-  }, [content, onSave, onError, onOptimisticAdd]);
+  }, [
+    content,
+    onSave,
+    onError,
+    onOptimisticAdd,
+    isOffline,
+    setError,
+    clearError,
+  ]);
 
   const handleContentChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -222,6 +266,43 @@ export function EntryForm({
   return (
     <div className={className}>
       <div className='space-y-6'>
+        {/* Error Display */}
+        {formError && (
+          <ErrorDisplay
+            error={formError}
+            onRetry={canRetry ? retry : undefined}
+            onDismiss={clearError}
+            canRetry={canRetry}
+            isRetrying={isRetrying}
+            variant='card'
+          />
+        )}
+
+        {/* Offline Warning */}
+        {isOffline && (
+          <div className='p-4 bg-warning/10 border border-warning/20 rounded-lg'>
+            <div className='flex items-center gap-2 text-warning-foreground'>
+              <svg
+                className='w-5 h-5'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z'
+                />
+              </svg>
+              <span className='text-sm font-medium'>You&apos;re offline</span>
+            </div>
+            <p className='text-sm text-warning-foreground/80 mt-1'>
+              Your entries will be saved once you&apos;re back online.
+            </p>
+          </div>
+        )}
+
         <div>
           <TextArea
             value={content}
@@ -235,7 +316,7 @@ export function EntryForm({
               'focus:min-h-[300px] transition-all duration-300'
             )}
             error={validationError}
-            disabled={isLoading}
+            disabled={isLoading || isOffline}
           />
         </div>
 
@@ -243,12 +324,16 @@ export function EntryForm({
           <div className='flex flex-col sm:flex-row sm:items-center gap-4'>
             <Button
               onClick={handleManualSave}
-              isLoading={isLoading}
-              disabled={!content.trim() || isLoading}
+              isLoading={isLoading || isRetrying}
+              disabled={!content.trim() || isLoading || isOffline || isRetrying}
               size='md'
               className='w-full sm:w-auto'
             >
-              Save Entry
+              {isRetrying
+                ? 'Retrying...'
+                : isOffline
+                ? 'Offline'
+                : 'Save Entry'}
             </Button>
 
             {content.trim() && (
