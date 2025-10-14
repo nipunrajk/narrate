@@ -51,8 +51,8 @@
   - Add loading skeleton components for better UX
   - _Requirements: 6.1, 6.3, 6.4_
 
-- [ ] 6. Journal Entry Management System
-- [ ] 6.1 Create journal entry form and validation
+- [x] 6. Journal Entry Management System
+- [x] 6.1 Create journal entry form and validation
 
   - Build EntryForm component with auto-save functionality
   - Implement client-side validation for entry content
@@ -60,7 +60,7 @@
   - Add optimistic UI updates for immediate feedback
   - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 6.2 Implement past entries display functionality
+- [x] 6.2 Implement past entries display functionality
 
   - Create EntryList component to display user's journal entries
   - Build EntryItem component for individual entry display
