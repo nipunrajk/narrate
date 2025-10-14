@@ -8,7 +8,7 @@
   - Create basic project structure with folders for components, lib, and types
   - _Requirements: 7.1, 7.3, 7.4_
 
-- [-] 2. Database Schema and Supabase Configuration
+- [x] 2. Database Schema and Supabase Configuration
 
   - Set up Supabase project and configure environment variables
   - Create profiles table with proper schema and constraints

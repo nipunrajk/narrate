@@ -2,7 +2,7 @@
 
 export interface Profile {
   id: string;
-  username?: string;
+  username: string | null;
   created_at: string;
 }
 
@@ -23,28 +23,47 @@ export interface WeeklySummary {
 }
 
 // Supabase database schema types
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       profiles: {
         Row: Profile;
-        Insert: Omit<Profile, 'id' | 'created_at'> & {
+        Insert: {
           id: string;
+          username?: string | null;
           created_at?: string;
         };
-        Update: Partial<Omit<Profile, 'id'>>;
+        Update: {
+          username?: string | null;
+        };
       };
       entries: {
         Row: JournalEntry;
-        Insert: Omit<JournalEntry, 'id' | 'created_at'> & {
+        Insert: {
           id?: string;
+          user_id: string;
+          content: string;
           created_at?: string;
         };
-        Update: Partial<Omit<JournalEntry, 'id' | 'user_id'>>;
+        Update: {
+          content?: string;
+        };
       };
     };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
-}
+};
 
 // API response types
 export interface ApiResponse<T = unknown> {
