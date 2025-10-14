@@ -16,6 +16,7 @@ export interface JournalEntry {
 export interface WeeklySummary {
   summary: string;
   theme: string;
+  insights?: string[];
   period: {
     start: string;
     end: string;

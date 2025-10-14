@@ -6,7 +6,13 @@ import {
   validateEntryContent,
   sanitizeEntryContent,
 } from '@/lib/utils/validation';
-import type { ApiResponse, JournalEntry } from '@/lib/types/database';
+import { getLastWeekRange, formatDate } from '@/lib/utils/date';
+import { generateWeeklySummary, GeminiAPIError } from '@/lib/ai';
+import type {
+  ApiResponse,
+  JournalEntry,
+  WeeklySummary,
+} from '@/lib/types/database';
 
 /**
  * Server action to save a journal entry
@@ -187,6 +193,194 @@ export async function updateEntry(
     return {
       success: false,
       error: 'An unexpected error occurred. Please try again.',
+    };
+  }
+}
+/**
+ * Server action to fetch entries from the last 7 days for weekly summary
+ */
+export async function getEntriesForWeeklySummary(): Promise<
+  ApiResponse<JournalEntry[]>
+> {
+  try {
+    // Get authenticated user
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: 'Authentication required',
+      };
+    }
+
+    // Get date range for the last 7 days
+    const { start, end } = getLastWeekRange();
+
+    // Fetch entries from the last 7 days
+    const { data, error } = await supabase
+      .from('entries')
+      .select('*')
+      .eq('user_id', user.id)
+      .gte('created_at', start.toISOString())
+      .lte('created_at', end.toISOString())
+      .order('created_at', { ascending: true }); // Chronological order for AI processing
+
+    if (error) {
+      console.error('Database error fetching entries for summary:', error);
+      return {
+        success: false,
+        error: 'Failed to fetch entries for summary. Please try again.',
+      };
+    }
+
+    return {
+      success: true,
+      data: data || [],
+    };
+  } catch (error) {
+    console.error('Unexpected error fetching entries for summary:', error);
+    return {
+      success: false,
+      error: 'An unexpected error occurred. Please try again.',
+    };
+  }
+}
+
+/**
+ * Server action to generate a weekly summary using AI
+ */
+export async function generateWeeklySummaryAction(): Promise<
+  ApiResponse<WeeklySummary>
+> {
+  try {
+    // Get entries from the last 7 days
+    const entriesResult = await getEntriesForWeeklySummary();
+
+    if (!entriesResult.success || !entriesResult.data) {
+      return {
+        success: false,
+        error: entriesResult.error || 'Failed to fetch entries',
+      };
+    }
+
+    const entries = entriesResult.data;
+
+    // Check minimum entry threshold (5 entries)
+    if (entries.length < 5) {
+      return {
+        success: false,
+        error: `You need at least 5 journal entries from the last 7 days to generate a summary. You currently have ${entries.length} entries.`,
+      };
+    }
+
+    // Get date range for formatting
+    const { start, end } = getLastWeekRange();
+    const startDate = formatDate(start);
+    const endDate = formatDate(end);
+
+    // Convert entries to the format expected by the AI
+    const entriesForAI = entries.map((entry) => ({
+      content: entry.content,
+      created_at: entry.created_at,
+    }));
+
+    // Generate summary using Gemini API
+    const aiSummary = await generateWeeklySummary(
+      entriesForAI,
+      startDate,
+      endDate
+    );
+
+    // Convert AI response to database format
+    const weeklySummary: WeeklySummary = {
+      summary: aiSummary.summary,
+      theme: aiSummary.theme,
+      insights: aiSummary.insights,
+      period: {
+        start: startDate,
+        end: endDate,
+      },
+    };
+
+    return {
+      success: true,
+      data: weeklySummary,
+    };
+  } catch (error) {
+    console.error('Error generating weekly summary:', error);
+
+    // Handle specific Gemini API errors
+    if (error instanceof GeminiAPIError) {
+      let userMessage = 'Failed to generate weekly summary. ';
+
+      switch (error.code) {
+        case 'MISSING_API_KEY':
+          userMessage += 'AI service is not configured properly.';
+          break;
+        case 'RATE_LIMIT':
+          userMessage +=
+            'Too many requests. Please try again in a few minutes.';
+          break;
+        case 'AUTH_ERROR':
+          userMessage += 'AI service authentication failed.';
+          break;
+        case 'NETWORK_ERROR':
+          userMessage +=
+            'Network connection issue. Please check your internet and try again.';
+          break;
+        default:
+          userMessage += 'Please try again later.';
+      }
+
+      return {
+        success: false,
+        error: userMessage,
+      };
+    }
+
+    return {
+      success: false,
+      error:
+        'An unexpected error occurred while generating your summary. Please try again.',
+    };
+  }
+}
+
+/**
+ * Server action to check if user has enough entries for weekly summary
+ */
+export async function canGenerateWeeklySummary(): Promise<
+  ApiResponse<{ canGenerate: boolean; entryCount: number }>
+> {
+  try {
+    const entriesResult = await getEntriesForWeeklySummary();
+
+    if (!entriesResult.success || !entriesResult.data) {
+      return {
+        success: false,
+        error: entriesResult.error || 'Failed to check entries',
+      };
+    }
+
+    const entryCount = entriesResult.data.length;
+    const canGenerate = entryCount >= 5;
+
+    return {
+      success: true,
+      data: {
+        canGenerate,
+        entryCount,
+      },
+    };
+  } catch (error) {
+    console.error('Error checking weekly summary eligibility:', error);
+    return {
+      success: false,
+      error: 'Failed to check summary eligibility. Please try again.',
     };
   }
 }

@@ -69,8 +69,8 @@
   - Create Server Action to fetch user's entries with RLS enforcement
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 7. AI Integration for Weekly Summaries
-- [ ] 7.1 Set up Google Gemini API integration
+- [x] 7. AI Integration for Weekly Summaries
+- [x] 7.1 Set up Google Gemini API integration
 
   - Create Gemini API client with proper authentication
   - Implement prompt formatting function for journal entries
@@ -78,7 +78,7 @@
   - Create utility functions for processing AI responses
   - _Requirements: 4.4, 4.5, 7.5_
 
-- [ ] 7.2 Implement weekly summary generation
+- [x] 7.2 Implement weekly summary generation
 
   - Create Server Action to fetch last 7 days of user entries
   - Implement logic to concatenate and format entries for AI processing
