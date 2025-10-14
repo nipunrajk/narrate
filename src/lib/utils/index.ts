@@ -11,36 +11,15 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Format date for display in the application
+ * Truncate text to specified length
  */
-export function formatDate(date: string | Date): string {
-  const d = new Date(date);
-  return d.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+export function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength).trim() + '...';
 }
 
 /**
- * Format date for relative display (e.g., "2 days ago")
- */
-export function formatRelativeDate(date: string | Date): string {
-  const d = new Date(date);
-  const now = new Date();
-  const diffInMs = now.getTime() - d.getTime();
-  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-  if (diffInDays === 0) return 'Today';
-  if (diffInDays === 1) return 'Yesterday';
-  if (diffInDays < 7) return `${diffInDays} days ago`;
-  if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
-  if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} months ago`;
-  return `${Math.floor(diffInDays / 365)} years ago`;
-}
-
-/**
- * Validate email format
+ * Simple email validation (basic check)
  */
 export function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -48,16 +27,42 @@ export function isValidEmail(email: string): boolean {
 }
 
 /**
- * Validate password strength
+ * Simple password validation (basic check)
  */
 export function isValidPassword(password: string): boolean {
   return password.length >= 8;
 }
 
 /**
- * Truncate text to specified length
+ * Generate a random ID string
  */
-export function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength).trim() + '...';
+export function generateId(): string {
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
+
+/**
+ * Debounce function for performance optimization
+ */
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
+
+/**
+ * Sleep function for async operations
+ */
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Re-export date utilities
+export * from './date';
+
+// Re-export validation utilities
+export * from './validation';

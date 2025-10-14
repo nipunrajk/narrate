@@ -65,6 +65,14 @@ export type Database = {
   };
 };
 
+// Helper types for Supabase operations
+export type Tables<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Row'];
+export type TablesInsert<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Insert'];
+export type TablesUpdate<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Update'];
+
 // API response types
 export interface ApiResponse<T = unknown> {
   success: boolean;
@@ -80,4 +88,22 @@ export interface AuthFormData {
 
 export interface EntryFormData {
   content: string;
+}
+
+// Validation result types
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
+// Date range type for weekly summaries
+export interface DateRange {
+  start: Date;
+  end: Date;
+}
+
+// Entry with formatted date for display
+export interface FormattedJournalEntry extends JournalEntry {
+  formatted_date: string;
+  relative_date: string;
 }
