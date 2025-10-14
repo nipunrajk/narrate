@@ -6,8 +6,9 @@ interface ModalProps {
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   showCloseButton?: boolean;
+  className?: string;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -17,8 +18,9 @@ const Modal: React.FC<ModalProps> = ({
   children,
   size = 'md',
   showCloseButton = true,
+  className,
 }) => {
-  // Handle escape key
+  // Handle escape key and focus management
   React.useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -29,6 +31,37 @@ const Modal: React.FC<ModalProps> = ({
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
+
+      // Focus management for accessibility
+      const focusableElements = document.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const firstElement = focusableElements[0] as HTMLElement;
+      const lastElement = focusableElements[
+        focusableElements.length - 1
+      ] as HTMLElement;
+
+      const handleTabKey = (e: KeyboardEvent) => {
+        if (e.key === 'Tab') {
+          if (e.shiftKey) {
+            if (document.activeElement === firstElement) {
+              lastElement?.focus();
+              e.preventDefault();
+            }
+          } else {
+            if (document.activeElement === lastElement) {
+              firstElement?.focus();
+              e.preventDefault();
+            }
+          }
+        }
+      };
+
+      document.addEventListener('keydown', handleTabKey);
+
+      return () => {
+        document.removeEventListener('keydown', handleTabKey);
+      };
     }
 
     return () => {
@@ -40,17 +73,21 @@ const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   const sizes = {
-    sm: 'max-w-md',
+    sm: 'max-w-sm',
     md: 'max-w-lg',
     lg: 'max-w-2xl',
     xl: 'max-w-4xl',
+    full: 'max-w-[95vw] max-h-[95vh]',
   };
 
   return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center'>
+    <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
       {/* Backdrop */}
       <div
-        className='fixed inset-0 bg-black/50 transition-opacity'
+        className={cn(
+          'fixed inset-0 bg-black/50 backdrop-blur-adaptive',
+          'transition-opacity duration-200 animate-fade-in'
+        )}
         onClick={onClose}
         aria-hidden='true'
       />
@@ -58,8 +95,14 @@ const Modal: React.FC<ModalProps> = ({
       {/* Modal */}
       <div
         className={cn(
-          'relative w-full mx-4 bg-white rounded-lg shadow-xl',
-          sizes[size]
+          'relative w-full bg-card border border-border rounded-xl shadow-medium',
+          'animate-scale-in transition-all duration-200',
+          'dark:shadow-medium-dark',
+          // Mobile-first responsive sizing
+          'max-h-[90vh] overflow-hidden',
+          'sm:max-h-[85vh]',
+          sizes[size],
+          className
         )}
         role='dialog'
         aria-modal='true'
@@ -67,11 +110,17 @@ const Modal: React.FC<ModalProps> = ({
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className='flex items-center justify-between p-6 border-b border-slate-200'>
+          <div
+            className={cn(
+              'flex items-center justify-between',
+              'p-4 sm:p-6 border-b border-border',
+              'bg-card/50 backdrop-blur-sm'
+            )}
+          >
             {title && (
               <h2
                 id='modal-title'
-                className='text-lg font-semibold text-slate-900'
+                className='text-lg sm:text-xl font-semibold text-card-foreground'
               >
                 {title}
               </h2>
@@ -79,14 +128,20 @@ const Modal: React.FC<ModalProps> = ({
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className='text-slate-400 hover:text-slate-600 transition-colors'
+                className={cn(
+                  'text-muted-foreground hover:text-foreground',
+                  'transition-colors-smooth rounded-md p-1',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  'touch-target'
+                )}
                 aria-label='Close modal'
               >
                 <svg
-                  className='w-6 h-6'
+                  className='w-5 h-5 sm:w-6 sm:h-6'
                   fill='none'
                   stroke='currentColor'
                   viewBox='0 0 24 24'
+                  aria-hidden='true'
                 >
                   <path
                     strokeLinecap='round'
@@ -101,7 +156,14 @@ const Modal: React.FC<ModalProps> = ({
         )}
 
         {/* Content */}
-        <div className='p-6'>{children}</div>
+        <div
+          className={cn(
+            'p-4 sm:p-6 overflow-y-auto',
+            'max-h-[calc(90vh-8rem)] sm:max-h-[calc(85vh-8rem)]'
+          )}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );

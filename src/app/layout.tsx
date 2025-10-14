@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ThemeProvider } from '@/components/ui/ThemeProvider';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -7,7 +8,11 @@ export const metadata: Metadata = {
     'A modern journaling app with AI-powered weekly insights to help you discover your personal story.',
   keywords: ['journal', 'diary', 'reflection', 'AI', 'personal growth'],
   authors: [{ name: 'Narrate Team' }],
-  viewport: 'width=device-width, initial-scale=1',
+  viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#fafafa' },
+    { media: '(prefers-color-scheme: dark)', color: '#020617' },
+  ],
 };
 
 export default function RootLayout({
@@ -16,8 +21,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en' className='h-full'>
-      <body className='h-full antialiased'>{children}</body>
+    <html lang='en' className='h-full' suppressHydrationWarning>
+      <body className='h-full antialiased'>
+        <ThemeProvider defaultTheme='system' storageKey='narrate-ui-theme'>
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

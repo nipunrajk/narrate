@@ -5,6 +5,7 @@ import { TextArea } from '@/components/ui/TextArea';
 import { Button } from '@/components/ui/Button';
 import { saveEntry } from '@/lib/actions/entries';
 import { validateEntryContent } from '@/lib/utils/validation';
+import { cn } from '@/lib/utils';
 import type { JournalEntry } from '@/lib/types/database';
 
 interface EntryFormProps {
@@ -208,19 +209,19 @@ export function EntryForm({
   const getSaveStatusColor = () => {
     switch (saveStatus) {
       case 'saving':
-        return 'text-blue-600';
+        return 'text-primary';
       case 'saved':
-        return 'text-green-600';
+        return 'text-success-600';
       case 'error':
-        return 'text-red-600';
+        return 'text-destructive';
       default:
-        return 'text-slate-500';
+        return 'text-muted-foreground';
     }
   };
 
   return (
     <div className={className}>
-      <div className='space-y-4'>
+      <div className='space-y-6'>
         <div>
           <TextArea
             value={content}
@@ -228,25 +229,30 @@ export function EntryForm({
             placeholder={placeholder}
             autoResize
             rows={8}
-            className='min-h-[200px] text-base leading-relaxed'
+            className={cn(
+              'min-h-[200px] sm:min-h-[240px]',
+              'text-base sm:text-lg leading-relaxed',
+              'focus:min-h-[300px] transition-all duration-300'
+            )}
             error={validationError}
             disabled={isLoading}
           />
         </div>
 
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center space-x-4'>
+        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+          <div className='flex flex-col sm:flex-row sm:items-center gap-4'>
             <Button
               onClick={handleManualSave}
               isLoading={isLoading}
               disabled={!content.trim() || isLoading}
               size='md'
+              className='w-full sm:w-auto'
             >
               Save Entry
             </Button>
 
             {content.trim() && (
-              <span className='text-sm text-slate-500'>
+              <span className='text-caption text-muted-foreground text-center sm:text-left'>
                 {content.length} characters
               </span>
             )}
@@ -254,14 +260,19 @@ export function EntryForm({
 
           {/* Save status indicator */}
           {saveStatus !== 'idle' && (
-            <div className={`text-sm ${getSaveStatusColor()}`}>
+            <div
+              className={cn(
+                'text-caption text-center sm:text-right',
+                getSaveStatusColor()
+              )}
+            >
               {getSaveStatusText()}
             </div>
           )}
         </div>
 
         {/* Auto-save info */}
-        <div className='text-xs text-slate-400'>
+        <div className='text-xs text-muted-foreground text-center sm:text-left'>
           Your entry will be automatically saved as you write.
         </div>
       </div>

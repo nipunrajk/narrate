@@ -2,8 +2,8 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   isLoading?: boolean;
   children: React.ReactNode;
 }
@@ -21,23 +21,46 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    const baseStyles =
-      'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+    const baseStyles = cn(
+      'inline-flex items-center justify-center rounded-lg font-medium',
+      'transition-colors-smooth focus-visible:outline-none focus-visible:ring-2',
+      'focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+      'disabled:pointer-events-none disabled:opacity-50',
+      'touch-target' // Mobile-friendly touch target
+    );
 
     const variants = {
-      primary:
-        'bg-slate-900 text-white hover:bg-slate-800 focus-visible:ring-slate-900',
-      secondary:
-        'bg-slate-100 text-slate-900 hover:bg-slate-200 focus-visible:ring-slate-500',
-      outline:
-        'border border-slate-200 bg-white hover:bg-slate-50 focus-visible:ring-slate-500',
-      ghost: 'hover:bg-slate-100 focus-visible:ring-slate-500',
+      primary: cn(
+        'bg-primary text-primary-foreground shadow-sm',
+        'hover:bg-primary/90 active:bg-primary/95',
+        'dark:shadow-soft-dark'
+      ),
+      secondary: cn(
+        'bg-secondary text-secondary-foreground shadow-sm',
+        'hover:bg-secondary/80 active:bg-secondary/90',
+        'dark:shadow-soft-dark'
+      ),
+      outline: cn(
+        'border border-input bg-background shadow-sm',
+        'hover:bg-accent hover:text-accent-foreground',
+        'active:bg-accent/90'
+      ),
+      ghost: cn(
+        'hover:bg-accent hover:text-accent-foreground',
+        'active:bg-accent/90'
+      ),
+      destructive: cn(
+        'bg-destructive text-destructive-foreground shadow-sm',
+        'hover:bg-destructive/90 active:bg-destructive/95',
+        'dark:shadow-soft-dark'
+      ),
     };
 
     const sizes = {
-      sm: 'h-8 px-3 text-sm',
-      md: 'h-10 px-4 py-2',
-      lg: 'h-12 px-6 text-lg',
+      sm: 'h-8 px-3 text-sm rounded-md',
+      md: 'h-10 px-4 py-2 text-sm',
+      lg: 'h-11 px-6 text-base',
+      xl: 'h-12 px-8 text-lg',
     };
 
     return (
@@ -53,6 +76,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             xmlns='http://www.w3.org/2000/svg'
             fill='none'
             viewBox='0 0 24 24'
+            aria-hidden='true'
           >
             <circle
               className='opacity-25'

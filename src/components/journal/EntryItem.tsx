@@ -7,6 +7,7 @@ import {
   isToday,
   isYesterday,
 } from '@/lib/utils/date';
+import { cn } from '@/lib/utils';
 import type { JournalEntry } from '@/lib/types/database';
 import type { OptimisticEntry } from '@/hooks/useOptimisticEntries';
 
@@ -55,55 +56,63 @@ export function EntryItem({
 
   return (
     <article
-      className={`
-        bg-white rounded-lg border border-slate-200 p-6 space-y-4 
-        transition-all duration-200 hover:shadow-sm
-        ${isPending ? 'opacity-60 animate-pulse' : ''}
-        ${className}
-      `}
+      className={cn(
+        'bg-card rounded-xl border border-border p-6 space-y-4 shadow-soft',
+        'transition-all duration-200 hover:shadow-medium',
+        'animate-fade-in',
+        isPending && 'opacity-60 animate-pulse',
+        className
+      )}
     >
       {/* Header with date information */}
       <header className='flex items-center justify-between'>
         <div className='flex items-center space-x-3'>
-          <h3 className='text-lg font-medium text-slate-900'>
+          <h3 className='text-subheading font-medium text-card-foreground'>
             {getDateDisplay()}
           </h3>
           {!isToday(entry.created_at) && !isYesterday(entry.created_at) && (
-            <span className='text-sm text-slate-500'>{relativeDate}</span>
+            <span className='text-caption text-muted-foreground'>
+              {relativeDate}
+            </span>
           )}
         </div>
 
         {/* Pending indicator */}
         {isPending && (
-          <div className='flex items-center space-x-2 text-sm text-blue-600'>
-            <div className='w-2 h-2 bg-blue-600 rounded-full animate-pulse'></div>
+          <div className='flex items-center space-x-2 text-caption text-primary'>
+            <div className='w-2 h-2 bg-primary rounded-full animate-pulse'></div>
             <span>Saving...</span>
           </div>
         )}
       </header>
 
       {/* Entry content */}
-      <div className='prose prose-slate max-w-none'>
-        <p className='text-slate-700 leading-relaxed whitespace-pre-wrap'>
+      <div className='journal-content'>
+        <p className='text-card-foreground leading-relaxed whitespace-pre-wrap'>
           {displayContent}
         </p>
       </div>
 
       {/* Expand/collapse button for long entries */}
       {entry.content.length > maxPreviewLength && (
-        <footer className='pt-2'>
+        <div className='pt-2'>
           <button
             onClick={handleToggleExpand}
-            className='text-sm text-slate-600 hover:text-slate-900 transition-colors'
+            className={cn(
+              'text-caption text-muted-foreground hover:text-foreground',
+              'transition-colors-smooth touch-target',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+              'disabled:opacity-50 disabled:cursor-not-allowed'
+            )}
             disabled={isPending}
           >
             {isExpanded ? 'Show less' : 'Read more'}
           </button>
-        </footer>
+        </div>
       )}
 
       {/* Entry metadata */}
-      <footer className='flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-100'>
+      <footer className='flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border'>
         <span>{entry.content.length} characters</span>
         <time dateTime={entry.created_at}>
           {new Date(entry.created_at).toLocaleTimeString('en-US', {

@@ -65,14 +65,15 @@ interface ErrorFallbackProps {
 
 function DefaultErrorFallback({ error, resetError }: ErrorFallbackProps) {
   return (
-    <div className='min-h-[400px] flex items-center justify-center'>
-      <div className='text-center max-w-md mx-auto p-6'>
-        <div className='text-red-500 mb-4'>
+    <div className='min-h-[400px] flex items-center justify-center p-4'>
+      <div className='text-center max-w-md mx-auto'>
+        <div className='text-destructive mb-6'>
           <svg
             className='w-16 h-16 mx-auto mb-4'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
+            aria-hidden='true'
           >
             <path
               strokeLinecap='round'
@@ -83,21 +84,21 @@ function DefaultErrorFallback({ error, resetError }: ErrorFallbackProps) {
           </svg>
         </div>
 
-        <h2 className='text-xl font-semibold text-slate-900 mb-2'>
+        <h2 className='text-subheading font-semibold text-foreground mb-2'>
           Something went wrong
         </h2>
 
-        <p className='text-slate-600 mb-6'>
+        <p className='text-body text-muted-foreground mb-6'>
           We encountered an unexpected error. Please try refreshing the page or
           contact support if the problem persists.
         </p>
 
         {process.env.NODE_ENV === 'development' && error && (
-          <details className='text-left mb-6 p-4 bg-red-50 border border-red-200 rounded-lg'>
-            <summary className='cursor-pointer text-sm font-medium text-red-800 mb-2'>
+          <details className='text-left mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg'>
+            <summary className='cursor-pointer text-caption font-medium text-destructive mb-2'>
               Error Details (Development)
             </summary>
-            <pre className='text-xs text-red-700 overflow-auto'>
+            <pre className='text-xs text-destructive/80 overflow-auto max-h-32'>
               {error.message}
               {error.stack && '\n\n' + error.stack}
             </pre>

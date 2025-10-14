@@ -30,40 +30,67 @@ const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
     // Merge refs
     React.useImperativeHandle(ref, () => textareaRef.current!);
 
-    // Auto-resize functionality
+    // Auto-resize functionality with improved performance
     React.useEffect(() => {
       if (autoResize && textareaRef.current) {
         const textarea = textareaRef.current;
+        let isResizing = false;
+
         const adjustHeight = () => {
-          textarea.style.height = 'auto';
-          textarea.style.height = `${textarea.scrollHeight}px`;
+          if (isResizing) return;
+          isResizing = true;
+
+          requestAnimationFrame(() => {
+            textarea.style.height = 'auto';
+            const scrollHeight = textarea.scrollHeight;
+            textarea.style.height = `${Math.max(scrollHeight, 120)}px`;
+            isResizing = false;
+          });
         };
 
         textarea.addEventListener('input', adjustHeight);
+        textarea.addEventListener('focus', adjustHeight);
         adjustHeight(); // Initial adjustment
 
-        return () => textarea.removeEventListener('input', adjustHeight);
+        return () => {
+          textarea.removeEventListener('input', adjustHeight);
+          textarea.removeEventListener('focus', adjustHeight);
+        };
       }
     }, [autoResize]);
 
     return (
-      <div className='w-full'>
+      <div className='w-full space-y-2'>
         {label && (
           <label
             htmlFor={textareaId}
-            className='block text-sm font-medium text-slate-700 mb-2'
+            className={cn(
+              'block text-sm font-medium leading-none',
+              'text-foreground',
+              'peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+            )}
           >
             {label}
           </label>
         )}
         <textarea
           className={cn(
-            'flex min-h-[120px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none',
+            'flex min-h-[120px] w-full rounded-lg border border-input',
+            'bg-background px-3 py-3 text-sm text-foreground',
+            'ring-offset-background transition-colors-smooth',
+            'placeholder:text-muted-foreground',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+            'disabled:cursor-not-allowed disabled:opacity-50',
+            'resize-none',
             // Journal-specific optimizations
-            'leading-relaxed tracking-wide font-normal',
+            'font-serif leading-relaxed tracking-wide',
+            'text-base sm:text-lg', // Larger text for better readability
             // Auto-resize styles
             autoResize && 'overflow-hidden',
-            error && 'border-red-500 focus-visible:ring-red-500',
+            // Mobile optimizations
+            'touch-target',
+            // Error state
+            error && 'border-destructive focus-visible:ring-destructive',
             className
           )}
           ref={textareaRef}
@@ -72,12 +99,15 @@ const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
           {...props}
         />
         {error && (
-          <p className='mt-2 text-sm text-red-600' role='alert'>
+          <p
+            className='text-sm text-destructive animate-slide-down'
+            role='alert'
+          >
             {error}
           </p>
         )}
         {helperText && !error && (
-          <p className='mt-2 text-sm text-slate-500'>{helperText}</p>
+          <p className='text-sm text-muted-foreground'>{helperText}</p>
         )}
       </div>
     );

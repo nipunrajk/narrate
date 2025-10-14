@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { signIn, signUp, resetPassword } from '@/lib/supabase/auth';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { cn } from '@/lib/utils';
 
 interface AuthFormProps {
   mode: 'login' | 'signup' | 'forgot-password';
@@ -81,9 +84,11 @@ export default function AuthForm({
 
   return (
     <div className='w-full max-w-md mx-auto'>
-      <div className='text-center mb-8'>
-        <h1 className='text-2xl font-light text-gray-900 mb-2'>{getTitle()}</h1>
-        <p className='text-gray-600'>
+      <div className='text-center mb-8 space-y-fluid'>
+        <h1 className='text-heading font-light text-card-foreground'>
+          {getTitle()}
+        </h1>
+        <p className='text-body text-muted-foreground'>
           {mode === 'login' && 'Sign in to continue your journaling journey'}
           {mode === 'signup' && 'Start your personal journaling journey'}
           {mode === 'forgot-password' &&
@@ -92,84 +97,95 @@ export default function AuthForm({
       </div>
 
       <form onSubmit={handleSubmit} className='space-y-6'>
-        <div>
-          <label
-            htmlFor='email'
-            className='block text-sm font-medium text-gray-700 mb-2'
-          >
-            Email address
-          </label>
-          <input
-            id='email'
-            type='email'
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-            placeholder='Enter your email'
-            disabled={isLoading}
-          />
-        </div>
+        <Input
+          id='email'
+          type='email'
+          label='Email address'
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          placeholder='Enter your email'
+          disabled={isLoading}
+          error={
+            error && error.toLowerCase().includes('email') ? error : undefined
+          }
+        />
 
         {mode !== 'forgot-password' && (
-          <div>
-            <label
-              htmlFor='password'
-              className='block text-sm font-medium text-gray-700 mb-2'
-            >
-              Password
-            </label>
-            <input
-              id='password'
-              type='password'
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className='w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-              placeholder='Enter your password'
-              disabled={isLoading}
-            />
-          </div>
+          <Input
+            id='password'
+            type='password'
+            label='Password'
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+            placeholder='Enter your password'
+            disabled={isLoading}
+            error={
+              error && error.toLowerCase().includes('password')
+                ? error
+                : undefined
+            }
+            helperText={
+              mode === 'signup'
+                ? 'Password must be at least 6 characters'
+                : undefined
+            }
+          />
         )}
 
-        {error && (
-          <div className='p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md'>
-            {error}
-          </div>
-        )}
+        {error &&
+          !error.toLowerCase().includes('email') &&
+          !error.toLowerCase().includes('password') && (
+            <div
+              className={cn(
+                'p-3 text-sm rounded-lg border animate-slide-down',
+                'bg-destructive/10 text-destructive border-destructive/20'
+              )}
+            >
+              {error}
+            </div>
+          )}
 
         {message && (
-          <div className='p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md'>
+          <div
+            className={cn(
+              'p-3 text-sm rounded-lg border animate-slide-down',
+              'bg-success-50 text-success-700 border-success-200'
+            )}
+          >
             {message}
           </div>
         )}
 
-        <button
+        <Button
           type='submit'
           disabled={isLoading}
-          className='w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'
+          isLoading={isLoading}
+          className='w-full'
+          size='lg'
         >
           {getButtonText()}
-        </button>
+        </Button>
       </form>
 
-      <div className='mt-6 text-center space-y-2'>
+      <div className='mt-6 text-center space-y-3'>
         {mode === 'login' && (
           <>
             <button
               type='button'
               onClick={() => onModeChange?.('forgot-password')}
-              className='text-sm text-blue-600 hover:text-blue-500'
+              className='text-caption text-primary hover:text-primary/80 transition-colors-smooth'
             >
               Forgot your password?
             </button>
-            <div className='text-sm text-gray-600'>
+            <div className='text-caption text-muted-foreground'>
               Don&apos;t have an account?{' '}
               <button
                 type='button'
                 onClick={() => onModeChange?.('signup')}
-                className='text-blue-600 hover:text-blue-500 font-medium'
+                className='text-primary hover:text-primary/80 font-medium transition-colors-smooth'
               >
                 Sign up
               </button>
@@ -178,12 +194,12 @@ export default function AuthForm({
         )}
 
         {mode === 'signup' && (
-          <div className='text-sm text-gray-600'>
+          <div className='text-caption text-muted-foreground'>
             Already have an account?{' '}
             <button
               type='button'
               onClick={() => onModeChange?.('login')}
-              className='text-blue-600 hover:text-blue-500 font-medium'
+              className='text-primary hover:text-primary/80 font-medium transition-colors-smooth'
             >
               Sign in
             </button>
@@ -191,12 +207,12 @@ export default function AuthForm({
         )}
 
         {mode === 'forgot-password' && (
-          <div className='text-sm text-gray-600'>
+          <div className='text-caption text-muted-foreground'>
             Remember your password?{' '}
             <button
               type='button'
               onClick={() => onModeChange?.('login')}
-              className='text-blue-600 hover:text-blue-500 font-medium'
+              className='text-primary hover:text-primary/80 font-medium transition-colors-smooth'
             >
               Sign in
             </button>
