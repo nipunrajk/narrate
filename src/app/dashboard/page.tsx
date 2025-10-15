@@ -111,12 +111,19 @@ export default async function DashboardPage() {
 
     // Fetch user's entries with error handling
     let initialEntries: JournalEntry[] = [];
+    let databaseError: string | null = null;
+
     try {
       const entriesResult = await getUserEntries();
-      initialEntries = entriesResult.success ? entriesResult.data || [] : [];
+      if (entriesResult.success) {
+        initialEntries = entriesResult.data || [];
+      } else {
+        databaseError = entriesResult.error || 'Unknown database error';
+        console.warn('Database not ready:', entriesResult.error);
+      }
     } catch (error) {
       console.error('Failed to fetch initial entries:', error);
-      // Continue with empty entries array - the client will handle the error
+      databaseError = 'Unable to connect to database';
     }
 
     return (
@@ -129,7 +136,11 @@ export default async function DashboardPage() {
           <div className='min-h-screen bg-background'>
             <Header user={user} />
             <Suspense fallback={<DashboardPageLoading />}>
-              <DashboardClient user={user} initialEntries={initialEntries} />
+              <DashboardClient
+                user={user}
+                initialEntries={initialEntries}
+                databaseError={databaseError}
+              />
             </Suspense>
           </div>
         </ErrorBoundary>

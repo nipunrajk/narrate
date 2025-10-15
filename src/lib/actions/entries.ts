@@ -58,10 +58,37 @@ export async function saveEntry(
       .single();
 
     if (error) {
-      console.error('Database error saving entry:', error);
+      console.error('Database error saving entry:', {
+        error,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+
+      // Provide more specific error messages based on error type
+      let userMessage = 'Failed to save entry. Please try again.';
+
+      if (
+        error.code === 'PGRST116' ||
+        error.message?.includes('relation') ||
+        error.message?.includes('table')
+      ) {
+        userMessage =
+          'Database table not found. Please contact support to set up your account.';
+      } else if (error.code === '42P01') {
+        userMessage =
+          'Database schema not initialized. Please contact support.';
+      } else if (
+        error.message?.includes('permission') ||
+        error.message?.includes('RLS')
+      ) {
+        userMessage = 'Access denied. Please log in again.';
+      }
+
       return {
         success: false,
-        error: 'Failed to save entry. Please try again.',
+        error: userMessage,
       };
     }
 
@@ -108,10 +135,37 @@ export async function getUserEntries(): Promise<ApiResponse<JournalEntry[]>> {
       .order('created_at', { ascending: false }); // Most recent first
 
     if (error) {
-      console.error('Database error fetching entries:', error);
+      console.error('Database error fetching entries:', {
+        error,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+
+      // Provide more specific error messages based on error type
+      let userMessage = 'Failed to fetch entries. Please try again.';
+
+      if (
+        error.code === 'PGRST116' ||
+        error.message?.includes('relation') ||
+        error.message?.includes('table')
+      ) {
+        userMessage =
+          'Database table not found. Please contact support to set up your account.';
+      } else if (error.code === '42P01') {
+        userMessage =
+          'Database schema not initialized. Please contact support.';
+      } else if (
+        error.message?.includes('permission') ||
+        error.message?.includes('RLS')
+      ) {
+        userMessage = 'Access denied. Please log in again.';
+      }
+
       return {
         success: false,
-        error: 'Failed to fetch entries. Please try again.',
+        error: userMessage,
       };
     }
 

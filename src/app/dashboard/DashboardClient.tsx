@@ -12,6 +12,7 @@ import type { JournalEntry } from '@/lib/types/database';
 interface DashboardClientProps {
   user: User;
   initialEntries: JournalEntry[];
+  databaseError?: string | null;
 }
 
 // Error fallback for the main dashboard content
@@ -143,7 +144,10 @@ function DashboardLoadingFallback() {
   );
 }
 
-export function DashboardClient({ initialEntries }: DashboardClientProps) {
+export function DashboardClient({
+  initialEntries,
+  databaseError,
+}: DashboardClientProps) {
   const [isWeeklySummaryOpen, setIsWeeklySummaryOpen] = useState(false);
 
   const handleWeeklySummaryClick = useCallback(() => {
@@ -185,6 +189,37 @@ export function DashboardClient({ initialEntries }: DashboardClientProps) {
             </p>
           </div>
         </div>
+
+        {/* Database Error Warning */}
+        {databaseError && (
+          <div className='mb-8 p-4 bg-warning/10 border border-warning/20 rounded-lg'>
+            <div className='flex items-start gap-3'>
+              <svg
+                className='w-5 h-5 text-warning mt-0.5 flex-shrink-0'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z'
+                />
+              </svg>
+              <div>
+                <h3 className='font-medium text-warning-foreground mb-1'>
+                  Database Setup Required
+                </h3>
+                <p className='text-sm text-warning-foreground/80'>
+                  {databaseError}. You can still use the journal interface, but
+                  your entries won&apos;t be saved until the database is
+                  configured.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Dashboard Content with Suspense and Error Boundary */}
         <ErrorBoundary fallback={DashboardErrorFallback}>
