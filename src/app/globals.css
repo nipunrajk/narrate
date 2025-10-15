@@ -1,6 +1,4 @@
-/* Import fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+/* Optimized font imports with preconnect and display=swap */
 
 @import 'tailwindcss';
 
@@ -71,7 +69,7 @@ html {
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
   background-color: rgb(var(--color-background));
   color: rgb(var(--color-foreground));
   line-height: 1.6;
@@ -145,7 +143,7 @@ body {
 
 /* Typography enhancements for journal content */
 .journal-content {
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: var(--font-crimson), 'Crimson Text', Georgia, serif;
   font-size: 1.125rem;
   line-height: 1.8;
   color: rgb(var(--color-foreground));

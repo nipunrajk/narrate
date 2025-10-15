@@ -50,10 +50,14 @@ export async function updateSession(request: NextRequest) {
 
       // If profile doesn't exist, create it
       if (error && error.code === 'PGRST116') {
-        await supabase.from('profiles').insert({
+        const { error: insertError } = await supabase.from('profiles').insert({
           id: user.id,
           username: user.email?.split('@')[0] || null,
         });
+
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+        }
       }
     } catch (error) {
       console.error('Error handling profile:', error);

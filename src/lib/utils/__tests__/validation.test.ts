@@ -340,8 +340,8 @@ describe('Validation Utilities', () => {
     });
 
     it('handles null/undefined input', () => {
-      expect(sanitizeTextInput(null as any)).toBe('');
-      expect(sanitizeTextInput(undefined as any)).toBe('');
+      expect(sanitizeTextInput(null as unknown as string)).toBe('');
+      expect(sanitizeTextInput(undefined as unknown as string)).toBe('');
     });
   });
 

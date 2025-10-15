@@ -108,6 +108,8 @@ export async function saveEntry(
   }
 }
 
+// Simple getUserEntries without caching to avoid auth conflicts
+
 /**
  * Server action to fetch user's journal entries
  */

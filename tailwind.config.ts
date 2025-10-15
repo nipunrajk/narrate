@@ -103,6 +103,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: [
+          'var(--font-inter)',
           'Inter',
           'ui-sans-serif',
           'system-ui',
@@ -114,12 +115,9 @@ const config: Config = {
           'Arial',
           'Noto Sans',
           'sans-serif',
-          'Apple Color Emoji',
-          'Segoe UI Emoji',
-          'Segoe UI Symbol',
-          'Noto Color Emoji',
         ],
         serif: [
+          'var(--font-crimson)',
           'Crimson Text',
           'ui-serif',
           'Georgia',

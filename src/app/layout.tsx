@@ -1,7 +1,26 @@
 import type { Metadata } from 'next';
+import { Inter, Crimson_Text } from 'next/font/google';
 import { ThemeProvider } from '@/components/ui/ThemeProvider';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
+import { PerformanceMonitor } from '@/components/ui/PerformanceMonitor';
 import './globals.css';
+
+// Optimized font loading
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+  preload: true,
+});
+
+const crimsonText = Crimson_Text({
+  subsets: ['latin'],
+  weight: ['400', '600'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+  variable: '--font-crimson',
+  preload: false, // Only preload primary font
+});
 
 export const metadata: Metadata = {
   title: 'Narrate - Your Digital Journal',
@@ -23,9 +42,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en' className='h-full' suppressHydrationWarning>
-      <body className='h-full antialiased'>
+      <head>
+        <link rel='preconnect' href='https://fonts.googleapis.com' />
+        <link
+          rel='preconnect'
+          href='https://fonts.gstatic.com'
+          crossOrigin='anonymous'
+        />
+      </head>
+      <body
+        className={`h-full antialiased ${inter.variable} ${crimsonText.variable}`}
+      >
         <ThemeProvider defaultTheme='system' storageKey='narrate-ui-theme'>
           <OfflineIndicator />
+          <PerformanceMonitor />
           {children}
         </ThemeProvider>
       </body>
